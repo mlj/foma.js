@@ -1,30 +1,58 @@
-window.foma_apply_down = (net, s) ->
-  foma_apply_dn net, s, 0, 0, "", new Array
+class FomaNet
+  constructor: (json) ->
+    @maxlen = json.maxlen
 
-foma_apply_dn = (net, s, pos, state, outString, reply) ->
-  if net.f[state] is 1 and pos is s.length
-    reply.push outString
+    @t = json.transitions
 
-  match = false
-  len = 0
+    @f = {}
+    @f[final] = true for final in json.finals
 
-  while len <= net.maxlen and len <= s.length - pos
-    key = "#{state}|#{s.substr(pos, len)}"
-    for key2, value2 of net.t[key]
-      for targetState, outputSymbol of value2
-        return unless targetState?
-        match = true
-        outputSymbol = "?" if outputSymbol is "@UN@"
-        foma_apply_dn net, s, pos + len, targetState, outString + outputSymbol, reply
-    len++
+    @s = {}
+    @s[sigma] = i for sigma, i in json.sigmas when i >= 3
 
-  if match and not net.s[s.substr(pos, 1)]? and s.length > pos
-    key = "#{state}|@ID@"
-    for key2, value2 of net.t[key]
-      for targetState, outputSymbol of value
-        return unless targetState?
-        outputSymbol = "?" if outputSymbol is "@UN@"
-        outputSymbol = s.substr(pos, 1) if outputSymbol is "@ID@"
-        foma_apply_dn net, s, pos + 1, targetState, outString + outputSymbol, reply
+  apply_down: (s) ->
+    @reply = []
+    @foma_apply_dn(s, 0, 0, "")
+    @reply
 
-  reply
+  foma_apply_dn: (s, pos, state, outString) ->
+    if @f[state] and pos is s.length
+      @reply.push outString
+
+    match = false
+    k = @t[state]
+
+    if k?
+      for len in [0..Math.min(@maxlen, s.length - pos)]
+        f = k["#{s.substr(pos, len)}"]
+        if f?
+          for value2 in f
+            for targetState, outputSymbol of value2
+              return match unless targetState?
+              match = true
+              outputSymbol = "?" if outputSymbol is "@UN@"
+              @foma_apply_dn s, pos + len, targetState, outString + outputSymbol
+
+      if match and not @s[s.substr(pos, 1)]? and s.length > pos
+        f = k["@ID@"]
+        if f?
+          for value2 in f
+            for targetState, outputSymbol of value
+              return match unless targetState?
+              outputSymbol = "?" if outputSymbol is "@UN@"
+              outputSymbol = s.substr(pos, 1) if outputSymbol is "@ID@"
+              @foma_apply_dn s, pos + 1, targetState, outString + outputSymbol
+
+    match
+
+cb = (data) ->
+  console.info("Building net")
+  net = new FomaNet(data)
+  window.net = net
+
+  console.info("Applying")
+  console.info(net.apply_down("amō+VERB+ger+acc"))
+  console.info(net.apply_down("amō+VERB+ger+acc"))
+
+console.info("Fetching JSON...")
+$.getJSON('test.json', cb)

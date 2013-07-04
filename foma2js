@@ -1,21 +1,9 @@
 #!/usr/bin/env ruby
 # coding: utf-8
-
-require 'pry'
-###################################################################
-# Converts foma file to js array for use with Javascript runtime  #
-# Outputs a js array of all the transitions, indexed in the       #
-# input direction. This array can be passed to the js function    #
-# foma_apply_down() in foma_apply_down.js for stand-alone         #
-# transducer application.                                         #
-#                                                                 #
-# Usage: foma2js [-n array variable name] [file]                  #
-# MH 20120127                                                     #
-###################################################################
-
+require 'json'
 require 'zlib'
 
-def parse(f, net_name)
+def parse(f)
   mode = :none
   version = nil
   numnets = 0
@@ -59,16 +47,16 @@ def parse(f, net_name)
         elsif transitions[1] == -1 and transitions.length == 4
           arrstate = transitions[0]
           arrfinal = transitions[3]
-          finals[arrstate] = 1 if arrfinal == 1
+          finals << arrstate if arrfinal == 1
         else
           case transitions.length
           when 5
             arrstate, arrin, arrout, arrtarget, arrfinal = *transitions
-            finals[arrstate] = 1 if arrfinal == 1
+            finals << arrstate if arrfinal == 1
           when 4
             arrstate, arrin, arrtarget, arrfinal = *transitions
             arrout = arrin
-            finals[arrstate] = 1 if arrfinal == 1
+            finals << arrstate if arrfinal == 1
           when 3
             arrin, arrout, arrtarget = *transitions
           when 2
@@ -78,9 +66,9 @@ def parse(f, net_name)
             raise "Unknown state"
           end
 
-          k = [arrstate, sigma[arrin]].join('|')
-          trans[k] ||= []
-          trans[k] << "{#{arrtarget}:'#{sigma[arrout]}'}"
+          trans[arrstate] ||= {}
+          trans[arrstate][sigma[arrin]] ||= []
+          trans[arrstate][sigma[arrin]] << { arrtarget.to_i => sigma[arrout] }
         end
       when :sigma
         number, symbol = l.split ' '
@@ -89,7 +77,6 @@ def parse(f, net_name)
         symbol.gsub! '@_EPSILON_SYMBOL_@', ''
         symbol.gsub! '@_IDENTITY_SYMBOL_@', '@ID@'
         symbol.gsub! '@_UNKNOWN_SYMBOL_@', '@UN@'
-        symbol.gsub! "'", "\\'"
         sigma[number] = symbol
 
         longestsymbollength = symbol.length if number > 2 and symbol.length > longestsymbollength
@@ -98,48 +85,25 @@ def parse(f, net_name)
       end
     end
   end
-
+  
   gz.close
 
-  puts "var #{net_name} = new Object;"
-  puts "#{net_name}.t = Array;"
-  puts "#{net_name}.f = Array;"
-  puts "#{net_name}.s = Array;"
-  puts
-
-  trans.each do |k, v|
-    state, _in = k.split '|'
-    _in.gsub! '@UN@', '@ID@' if _in
-    state = 0 if state.nil?
-    puts "#{net_name}.t[#{state} + '|' + '#{_in}'] = [#{v.join(',')}];"
-  end
-
-  finals.each_with_index do |s, i|
-    puts "#{net_name}.f[#{i}] = 1;" if s
-  end
-
-  sigma.each_with_index do |s, i|
-    next if i < 3 # ignore the first three
-    puts "#{net_name}.s['#{s}'] = #{i};" unless sigma[i].nil?
-  end
-
-  puts "#{net_name}.maxlen = #{longestsymbollength} ;"
+  obj = {
+    :maxlen => longestsymbollength,
+    :sigmas => sigma,
+    :finals => finals.sort,
+    :transitions => trans,
+  }
+  puts obj.to_json
 end
 
-net_name = 'myNet'
+if ARGV.length != 1
+  puts "Usage: foma2js filename"
+  exit 1
+end
 
-case ARGV.first
-when '-n'
-  ARGV.shift
-  net_name = ARGV.first
-  ARGV.shift
-when '-h', '--help', NilClass
-  puts "Usage: foma2js [-n name] filename"
-  exit 0
-else
-  File.open(ARGV.first) do |f|
-    parse(f, net_name)
-  end
+File.open(ARGV.first) do |f|
+  parse(f)
 end
 
 exit 0
