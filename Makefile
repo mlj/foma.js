@@ -1,7 +1,7 @@
-all: foma.js test.json
+all: foma.js test.json test.js
 
-foma.js: foma.coffee
-	coffee -c foma.coffee
+%.js: %.coffee
+	coffee -c $<
 
-test.json: foma2js
-	./foma2js test.bin > $@
+test.json: test.bin foma2json
+	./foma2json test.bin > $@

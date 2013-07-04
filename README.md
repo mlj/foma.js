@@ -7,7 +7,7 @@ a more compact representation than the original pure JS representation).
 
 The implementation otherwise shares the same key limitations as the original:
 
-> Basic recursive apply down function for Javascript runtime. 
+> Basic recursive apply down function for Javascript runtime.
 > Caveat: does not support flag diacritics and will recurse infinitely
 > on input-side epsilon-loops.
 
