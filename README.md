@@ -22,11 +22,23 @@ foma2json test.bin > test.json
 To apply the machine, do something like this:
 
 ```coffee
-cb = (data) ->
+jsonFetchedHandler = (data) ->
   net = new FomaNet(data)
-  console.info(net.apply_down("something"))
+  console.info(net.applyDown("something"))
 
-$.getJSON('test.json', cb)
+$.getJSON('test.json', jsonFetchedHandler)
+```
+
+Or with a callback:
+
+```coffee
+myHandler = (result, myData) ->
+
+jsonFetchedHandler = (data) ->
+  net = new FomaNet(data)
+  console.info(net.applyDown("something", myHandler, myData))
+
+$.getJSON('test.json', jsonFetchedHandler)
 ```
 
 ## Dependencies
