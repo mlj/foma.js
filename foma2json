@@ -4,7 +4,7 @@ require 'json'
 require 'zlib'
 
 def parse(file_name)
-  obj = { :version => nil, :maxlen => 0, :sigmas => [], :finals => [], :transitions => {} }
+  obj = { :version => nil, :maxlen => 0, :sigmas => [], :finals => [], :transitions => [] }
 
   mode = :none
   numnets = 0
@@ -57,7 +57,7 @@ def parse(file_name)
 
             obj[:transitions][arrstate] ||= {}
             obj[:transitions][arrstate][arrin] ||= []
-            obj[:transitions][arrstate][arrin] << { arrtarget => arrout }
+            obj[:transitions][arrstate][arrin] << [arrtarget, arrout]
           end
         when :sigma
           number, symbol = l.split ' '

@@ -4,4 +4,4 @@ all: foma.js test.json test.js
 	coffee -c $<
 
 test.json: test.bin foma2json
-	./foma2json test.bin | prettify_json.rb > $@
+	./foma2json test.bin > $@

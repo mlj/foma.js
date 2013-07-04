@@ -2,25 +2,21 @@ class FomaNet
   constructor: (json) ->
     @maxlen = json.maxlen
 
-    @f = {}
-    @f[final] = true for final in json.finals
+    @finals = {}
+    @finals[final] = true for final in json.finals
+
+    @sigmas = json.sigmas
 
     @s = {}
-    @s[sigma] = i for sigma, i in json.sigmas when i >= 3
+    @s[sigma] = i for sigma, i in @sigmas when i >= 3
 
-    @t = {}
+    @t = []
 
-    for state, v1 of json.transitions
+    for v1, state in json.transitions
       @t[state] = {}
       for inputSymbolId, v2 of v1
-        inputSymbol = json.sigmas[inputSymbolId]
-        @t[state][inputSymbol] = []
-        for v3 in v2
-          for targetState, outputSymbolId of v3
-            outputSymbol = json.sigmas[outputSymbolId]
-            k = {}
-            k[targetState] = outputSymbol
-            @t[state][inputSymbol].push(k)
+        inputSymbol = @sigmas[inputSymbolId]
+        @t[state][inputSymbol] = v2
 
   resultAccumulator: (s, userData) ->
     userData.push(s)
@@ -30,7 +26,7 @@ class FomaNet
       userData = []
       cb = @resultAccumulator
 
-    if @f[state] and pos is s.length
+    if @finals[state] and pos is s.length
       cb(outString, userData)
 
     match = false
@@ -41,21 +37,23 @@ class FomaNet
         f = k["#{s.substr(pos, len)}"]
         if f?
           for value2 in f
-            for targetState, outputSymbol of value2
-              return match unless targetState?
-              match = true
-              outputSymbol = "?" if outputSymbol is "@UN@"
-              @applyDown s, cb, userData, pos + len, targetState, outString + outputSymbol
+            [targetState, outputSymbolId] = value2
+            return match unless targetState?
+            match = true
+            outputSymbol = @sigmas[outputSymbolId]
+            outputSymbol = "?" if outputSymbol is "@UN@"
+            @applyDown s, cb, userData, pos + len, targetState, outString + outputSymbol
 
       if match and not @s[s.substr(pos, 1)]? and s.length > pos
         f = k["@ID@"]
         if f?
           for value2 in f
-            for targetState, outputSymbol of value
-              return match unless targetState?
-              outputSymbol = "?" if outputSymbol is "@UN@"
-              outputSymbol = s.substr(pos, 1) if outputSymbol is "@ID@"
-              @applyDown s, cb, userData, pos + 1, targetState, outString + outputSymbol
+            [targetState, outputSymbolId] = value2
+            return match unless targetState?
+            outputSymbol = @sigmas[outputSymbolId]
+            outputSymbol = "?" if outputSymbol is "@UN@"
+            outputSymbol = s.substr(pos, 1) if outputSymbol is "@ID@"
+            @applyDown s, cb, userData, pos + 1, targetState, outString + outputSymbol
 
     userData
 
