@@ -3,98 +3,82 @@
 require 'json'
 require 'zlib'
 
-def parse(f)
+def parse(file_name)
+  obj = { :version => nil, :maxlen => 0, :sigmas => [], :finals => [], :transitions => {} }
+
   mode = :none
-  version = nil
   numnets = 0
-  pr = {}
-  trans = {}
-  sigma = []
-  finals = []
-  longestsymbollength = 0
+#  pr = {}
   arrstate = nil # keep this state around when reading states
 
-  gz = Zlib::GzipReader.new(f)
+  Zlib::GzipReader.open(file_name) do |gz|
+    gz.each_line do |l|
+      l.chomp!
 
-  gz.each_line do |l|
-    l.chomp!
+      case l
+      when /^##foma-net ([0-9]+\.[0-9]+)##/
+        obj[:version] = $1
+        numnets += 1
+        raise "Only one network per file supported" if numnets > 1
+      when /^##(props|sigma|states|end)##/
+        mode = $1.to_sym
+      else
+        case mode
+        when :props
+#          pr[:arity], pr[:arccount], pr[:statecount], pr[:linecount],
+#            pr[:finalcount], pr[:pathcount], pr[:is_deterministic],
+#            pr[:is_pruned], pr[:is_minimized], pr[:is_epsilon_free],
+#            pr[:is_loop_free], pr[:extras], pr[:name] = l.split ' '
+        when :states
+          transitions = l.split(' ').map(&:to_i)
 
-    case l
-    when /##foma-net ([0-9]+\.[0-9]+)##/
-      version = $1
-      numnets += 1
-      raise "Only one network per file supported" if numnets > 1
-    when '##props##'
-      mode = :props
-    when '##sigma##'
-      mode = :sigma
-    when '##states##'
-      mode = :states
-    when '##end##'
-      mode = :none
-    else
-      case mode
-      when :props
-        pr[:arity], pr[:arccount], pr[:statecount], pr[:linecount],
-          pr[:finalcount], pr[:pathcount], pr[:is_deterministic],
-          pr[:is_pruned], pr[:is_minimized], pr[:is_epsilon_free],
-          pr[:is_loop_free], pr[:extras], pr[:name] = l.split ' '
-      when :states
-        # state in out target final
-        transitions = l.split(' ').map(&:to_i)
-
-        if transitions[0] == -1
-        elsif transitions[1] == -1 and transitions.length == 4
-          arrstate = transitions[0]
-          arrfinal = transitions[3]
-          finals << arrstate if arrfinal == 1
-        else
-          case transitions.length
-          when 5
-            arrstate, arrin, arrout, arrtarget, arrfinal = *transitions
-            finals << arrstate if arrfinal == 1
-          when 4
-            arrstate, arrin, arrtarget, arrfinal = *transitions
-            arrout = arrin
-            finals << arrstate if arrfinal == 1
-          when 3
-            arrin, arrout, arrtarget = *transitions
-          when 2
-            arrin, arrtarget = *transitions
-            arrout = arrin
+          if transitions[0] == -1
+          elsif transitions[1] == -1 and transitions.length == 4
+            arrstate = transitions[0]
+            arrfinal = transitions[3]
+            obj[:finals] << arrstate if arrfinal == 1
           else
-            raise "Unknown state"
+            case transitions.length
+            when 5
+              arrstate, arrin, arrout, arrtarget, arrfinal = *transitions
+              obj[:finals] << arrstate if arrfinal == 1
+            when 4
+              arrstate, arrin, arrtarget, arrfinal = *transitions
+              arrout = arrin
+              obj[:finals] << arrstate if arrfinal == 1
+            when 3
+              arrin, arrout, arrtarget = *transitions
+            when 2
+              arrin, arrtarget = *transitions
+              arrout = arrin
+            else
+              raise "Unknown state"
+            end
+
+            sin = obj[:sigmas][arrin]
+            sout = obj[:sigmas][arrout]
+
+            obj[:transitions][arrstate] ||= {}
+            obj[:transitions][arrstate][sin] ||= []
+            obj[:transitions][arrstate][sin] << { arrtarget.to_i => sout }
           end
+        when :sigma
+          number, symbol = l.split ' '
+          number = number.to_i
 
-          trans[arrstate] ||= {}
-          trans[arrstate][sigma[arrin]] ||= []
-          trans[arrstate][sigma[arrin]] << { arrtarget.to_i => sigma[arrout] }
+          symbol.gsub! '@_EPSILON_SYMBOL_@', ''
+          symbol.gsub! '@_IDENTITY_SYMBOL_@', '@ID@'
+          symbol.gsub! '@_UNKNOWN_SYMBOL_@', '@UN@'
+          obj[:sigmas][number] = symbol
+          obj[:maxlen] = symbol.length if number > 2 and symbol.length > obj[:maxlen]
+        when :none
+          raise "Format error"
         end
-      when :sigma
-        number, symbol = l.split ' '
-        number = number.to_i
-
-        symbol.gsub! '@_EPSILON_SYMBOL_@', ''
-        symbol.gsub! '@_IDENTITY_SYMBOL_@', '@ID@'
-        symbol.gsub! '@_UNKNOWN_SYMBOL_@', '@UN@'
-        sigma[number] = symbol
-
-        longestsymbollength = symbol.length if number > 2 and symbol.length > longestsymbollength
-      when :none
-        raise "Format error"
       end
     end
   end
-  
-  gz.close
 
-  obj = {
-    :maxlen => longestsymbollength,
-    :sigmas => sigma,
-    :finals => finals.sort,
-    :transitions => trans,
-  }
-  puts obj.to_json
+  obj
 end
 
 if ARGV.length != 1
@@ -102,8 +86,7 @@ if ARGV.length != 1
   exit 1
 end
 
-File.open(ARGV.first) do |f|
-  parse(f)
-end
+obj = parse(ARGV.first)
+puts obj.to_json
 
 exit 0
