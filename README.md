@@ -1,21 +1,25 @@
-# FOMA finite-state JS runtime
+# foma finite-state JS runtime
 
-This is a quick rewrite of the JS runtime for FOMA finite-state machines. It is
+This is a quick rewrite of the JS runtime for foma finite-state machines. It is
 based on the code found in the contrib directory of the foma-0.9.17
 distribution but reimplemented to store finite-state machines in JSON (which is
 a more compact representation than the original pure JS representation).
 
 The implementation otherwise shares the same key limitations as the original:
 
-> Converts foma file to js array for use with Javascript runtime
-> Outputs a js array of all the transitions, indexed in the
-> input direction. This array can be passed to the js function
-> foma_apply_down() in foma_apply_down.js for stand-alone
-> transducer application.
->
-> MH 20120127
+> Basic recursive apply down function for Javascript runtime. 
+> Caveat: does not support flag diacritics and will recurse infinitely
+> on input-side epsilon-loops.
 
 ## Usage
+
+To convert the foma binary to JSON:
+
+```sh
+foma2json test.bin > test.json
+```
+
+To apply the machine, do something like this:
 
 ```coffee
 cb = (data) ->
@@ -24,3 +28,7 @@ cb = (data) ->
 
 $.getJSON('test.json', cb)
 ```
+
+## Dependencies
+
+None
