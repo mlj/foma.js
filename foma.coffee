@@ -2,13 +2,25 @@ class FomaNet
   constructor: (json) ->
     @maxlen = json.maxlen
 
-    @t = json.transitions
-
     @f = {}
     @f[final] = true for final in json.finals
 
     @s = {}
     @s[sigma] = i for sigma, i in json.sigmas when i >= 3
+
+    @t = {}
+
+    for state, v1 of json.transitions
+      @t[state] = {}
+      for inputSymbolId, v2 of v1
+        inputSymbol = json.sigmas[inputSymbolId]
+        @t[state][inputSymbol] = []
+        for v3 in v2
+          for targetState, outputSymbolId of v3
+            outputSymbol = json.sigmas[outputSymbolId]
+            k = {}
+            k[targetState] = outputSymbol
+            @t[state][inputSymbol].push(k)
 
   resultAccumulator: (s, userData) ->
     userData.push(s)

@@ -55,12 +55,9 @@ def parse(file_name)
               raise "Unknown state"
             end
 
-            sin = obj[:sigmas][arrin]
-            sout = obj[:sigmas][arrout]
-
             obj[:transitions][arrstate] ||= {}
-            obj[:transitions][arrstate][sin] ||= []
-            obj[:transitions][arrstate][sin] << { arrtarget.to_i => sout }
+            obj[:transitions][arrstate][arrin] ||= []
+            obj[:transitions][arrstate][arrin] << { arrtarget => arrout }
           end
         when :sigma
           number, symbol = l.split ' '
