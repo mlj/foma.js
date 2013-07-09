@@ -4,11 +4,10 @@ require 'json'
 require 'zlib'
 
 def parse(file_name)
-  obj = { :version => nil, :sigmas => [], :states => [] }
+  obj = { :version => nil, :props => nil, :sigmas => [], :states => [] }
 
   mode = :none
   numnets = 0
-#  pr = {}
 
   Zlib::GzipReader.open(file_name) do |gz|
     gz.each_line do |l|
@@ -24,13 +23,9 @@ def parse(file_name)
       else
         case mode
         when :props
-#          pr[:arity], pr[:arccount], pr[:statecount], pr[:linecount],
-#            pr[:finalcount], pr[:pathcount], pr[:is_deterministic],
-#            pr[:is_pruned], pr[:is_minimized], pr[:is_epsilon_free],
-#            pr[:is_loop_free], pr[:extras], pr[:name] = l.split ' '
+          obj[:props] = l.split(' ').map { |x| x.to_i.to_s == x ? x.to_i : x }
         when :states
-          transitions = l.split(' ').map(&:to_i)
-          obj[:states] << transitions
+          obj[:states] << l.split(' ').map(&:to_i)
         when :sigma
           number, symbol = l.split ' '
 
