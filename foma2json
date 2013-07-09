@@ -32,32 +32,31 @@ def parse(file_name)
         when :states
           transitions = l.split(' ').map(&:to_i)
 
-          if transitions[0] == -1
-          elsif transitions[1] == -1 and transitions.length == 4
-            arrstate = transitions[0]
-            arrfinal = transitions[3]
-            obj[:finals] << arrstate if arrfinal == 1
-          else
+          unless transitions[0] == -1
             case transitions.length
             when 5
               arrstate, arrin, arrout, arrtarget, arrfinal = *transitions
-              obj[:finals] << arrstate if arrfinal == 1
             when 4
               arrstate, arrin, arrtarget, arrfinal = *transitions
               arrout = arrin
-              obj[:finals] << arrstate if arrfinal == 1
             when 3
               arrin, arrout, arrtarget = *transitions
+              arrfinal = nil
             when 2
               arrin, arrtarget = *transitions
               arrout = arrin
+              arrfinal = nil
             else
               raise "Unknown state"
             end
 
-            obj[:transitions][arrstate] ||= {}
-            obj[:transitions][arrstate][arrin] ||= []
-            obj[:transitions][arrstate][arrin] << [arrtarget, arrout]
+            unless arrin == -1
+              obj[:transitions][arrstate] ||= {}
+              obj[:transitions][arrstate][arrin] ||= []
+              obj[:transitions][arrstate][arrin] << [arrtarget, arrout]
+            end
+
+            obj[:finals] << arrstate if arrfinal == 1
           end
         when :sigma
           number, symbol = l.split ' '
