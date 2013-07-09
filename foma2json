@@ -61,13 +61,11 @@ def parse(file_name)
           end
         when :sigma
           number, symbol = l.split ' '
-          number = number.to_i
 
           symbol.gsub! '@_EPSILON_SYMBOL_@', ''
           symbol.gsub! '@_IDENTITY_SYMBOL_@', '@ID@'
           symbol.gsub! '@_UNKNOWN_SYMBOL_@', '@UN@'
-          obj[:sigmas][number] = symbol
-          obj[:maxlen] = symbol.length if number > 2 and symbol.length > obj[:maxlen]
+          obj[:sigmas][number.to_i] = symbol
         when :none
           raise "Format error"
         end

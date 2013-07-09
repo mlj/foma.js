@@ -1,11 +1,14 @@
 class FomaNet
   constructor: (json) ->
-    @maxlen = json.maxlen
-
     @finals = {}
     @finals[final] = true for final in json.finals
 
     @sigmas = json.sigmas
+
+    @maxlen = 0
+
+    for s, i in @sigmas when i > 2
+      @maxlen = s.length if s.length > @maxlen
 
     @s = {}
     @s[sigma] = i for sigma, i in @sigmas when i >= 3
