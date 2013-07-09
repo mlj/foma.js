@@ -1,25 +1,44 @@
 class FomaNet
-  constructor: (json) ->
-    @finals = {}
-    @finals[final] = true for final in json.finals
+  sigmas: []
+  maxlen: 0
+  finals: []
+  transitions: []
 
+  constructor: (json) ->
     @sigmas = json.sigmas
 
-    @maxlen = 0
-
-    for s, i in @sigmas when i > 2
+    for s, i in @sigmas when i > 2 # ignore the three first special ones
       @maxlen = s.length if s.length > @maxlen
+
+    arrstate = undefined # keep this state between iterations
+    for state in json.states
+      unless state[0] == -1
+        switch state.length
+          when 5
+            [arrstate, arrin, arrout, arrtarget, arrfinal] = state
+          when 4
+            [arrstate, arrin, arrtarget, arrfinal] = state
+            arrout = arrin
+          when 3
+            [arrin, arrout, arrtarget] = state
+            arrfinal = null
+          when 2
+            [arrin, arrtarget] = state
+            arrout = arrin
+            arrfinal = null
+          else
+            console.error("Invalid state machine")
+
+        unless arrin == -1
+          inputSymbol = @sigmas[arrin]
+          @transitions[arrstate] ||= {}
+          @transitions[arrstate][inputSymbol] ||= []
+          @transitions[arrstate][inputSymbol].push([arrtarget, arrout])
+
+        @finals[arrstate] = true if arrfinal == 1
 
     @s = {}
     @s[sigma] = i for sigma, i in @sigmas when i >= 3
-
-    @t = []
-
-    for v1, state in json.transitions
-      @t[state] = {}
-      for inputSymbolId, v2 of v1
-        inputSymbol = @sigmas[inputSymbolId]
-        @t[state][inputSymbol] = v2
 
   resultAccumulator: (s, userData) ->
     userData.push(s)
@@ -33,7 +52,7 @@ class FomaNet
       cb(outString, userData)
 
     match = false
-    k = @t[state]
+    k = @transitions[state]
 
     if k?
       for len in [0..Math.min(@maxlen, s.length - pos)]
