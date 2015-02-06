@@ -3,44 +3,46 @@
 require 'json'
 require 'zlib'
 
-def parse(file_name)
-  obj = { :version => nil, :props => nil, :sigmas => [], :states => [] }
+class ParseError < StandardError; end
 
-  mode = :none
-  numnets = 0
+def parse(filename)
+  { version: nil, props: nil, sigmas: [], states: [] }.tap do |obj|
+    mode = nil
+    numnets = 0
 
-  Zlib::GzipReader.open(file_name) do |gz|
-    gz.each_line do |l|
+    Zlib::GzipReader.open(filename).each_line do |l|
       l.chomp!
 
       case l
       when /^##foma-net ([0-9]+\.[0-9]+)##/
+        mode = nil
         obj[:version] = $1
         numnets += 1
         raise "Only one network per file supported" if numnets > 1
-      when /^##(props|sigma|states|end)##/
-        mode = $1.to_sym
-      else
-        case mode
-        when :props
-          obj[:props] = l.split(' ').map { |x| x.to_i.to_s == x ? x.to_i : x }
-        when :states
-          obj[:states] << l.split(' ').map(&:to_i)
-        when :sigma
+      when '##props##'
+        mode = -> (l) { obj[:props] = l.split(' ').map { |x| x.to_i.to_s == x ? x.to_i : x } }
+      when '##states##'
+        mode = -> (l) { obj[:states] << l.split(' ').map(&:to_i) }
+      when '##sigma##'
+        mode = -> (l) {
           number, symbol = l.split ' '
 
           symbol.gsub! '@_EPSILON_SYMBOL_@', ''
           symbol.gsub! '@_IDENTITY_SYMBOL_@', '@ID@'
           symbol.gsub! '@_UNKNOWN_SYMBOL_@', '@UN@'
           obj[:sigmas][number.to_i] = symbol
-        when :none
-          raise "Format error"
-        end
+        }
+      when '##end##'
+        mode = nil
+      when /^##/
+        raise ParseError, "unexpected control symbol"
+      else
+        raise ParseError, "unexpected literal data" unless l
+
+        mode.call(l)
       end
     end
   end
-
-  obj
 end
 
 if ARGV.length != 1
@@ -48,7 +50,4 @@ if ARGV.length != 1
   exit 1
 end
 
-obj = parse(ARGV.first)
-puts obj.to_json
-
-exit 0
+puts parse(ARGV.first).to_json
