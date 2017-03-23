@@ -1,0 +1,2 @@
+regex {foobar}:{foo} | {foobar}:{bar};
+save stack test.bin

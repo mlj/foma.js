@@ -1,0 +1,43 @@
+{
+  "name": "foma-fst",
+  "version": "1.0.0",
+  "description": "A runtime for FOMA finite-state machines",
+  "homepage": "https://github.com/mlj/foma.js",
+  "main": "build/foma-fst.js",
+  "module": "index",
+  "jsnext:main": "index",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mlj/foma.js"
+  },
+  "keywords": [
+    "FOMA",
+    "finite state",
+    "finite-state machine",
+    "finite-state transducer"
+  ],
+  "author": {
+    "name": "Marius L. Jøhndal",
+    "email": "mariuslj@ifi.uio.no"
+  },
+  "licenses": {
+    "type": "MIT",
+    "url": "https://raw.github.com/mlj/foma.js/master/LICENSE"
+  },
+  "bugs": {
+    "url": "https://github.com/mlj/foma.js/issues"
+  },
+  "scripts": {
+    "pretest": "rm -rf build && mkdir build && rollup --banner \"$(preamble)\" -f umd -n foma-fst -o build/foma-fst.js -- index.js",
+    "test": "tape 'test/**/*-test.js' && eslint index.js src",
+    "prepublish": "npm run test && uglifyjs --preamble \"$(preamble)\" build/foma-fst.js -c -m -o build/foma-fst.min.js"
+  },
+  "devDependencies": {
+    "eslint": "3",
+    "package-preamble": "0.0",
+    "rollup": "0.41",
+    "seedrandom": "2",
+    "tape": "4",
+    "uglify-js": "^2.8.11"
+  }
+}
