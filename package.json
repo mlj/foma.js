@@ -33,7 +33,7 @@
     "prepublish": "npm run test && uglifyjs --preamble \"$(preamble)\" build/foma-fst.js -c -m -o build/foma-fst.min.js"
   },
   "devDependencies": {
-    "eslint": "4",
+    "eslint": "6",
     "package-preamble": "0.0",
     "rollup": "0.41",
     "seedrandom": "2",
