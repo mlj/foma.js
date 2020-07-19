@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "A runtime for FOMA finite-state machines",
   "homepage": "https://github.com/mlj/foma.js",
-  "main": "build/foma-fst.js",
-  "module": "index",
+  "main": "dist/foma-fst.js",
+  "module": "src/index.js",
   "jsnext:main": "index",
   "repository": {
     "type": "git",
@@ -28,15 +28,14 @@
     "url": "https://github.com/mlj/foma.js/issues"
   },
   "scripts": {
-    "pretest": "rm -rf build && mkdir build && rollup --banner \"$(preamble)\" -f umd -n foma-fst -o build/foma-fst.js -- index.js",
-    "test": "tape 'test/**/*-test.js' && eslint index.js src",
-    "prepublish": "npm run test && uglifyjs --preamble \"$(preamble)\" build/foma-fst.js -c -m -o build/foma-fst.min.js"
+    "pretest": "rollup -c",
+    "test": "tape 'test/**/*-test.js' && eslint src",
+    "prepublish": "npm run test"
   },
   "devDependencies": {
     "eslint": "4",
-    "package-preamble": "0.0",
-    "rollup": "0.41",
-    "tape": "4",
-    "uglify-js": "^2.8.11"
+    "rollup": "1",
+    "rollup-plugin-terser": "5",
+    "tape": "4"
   }
 }
