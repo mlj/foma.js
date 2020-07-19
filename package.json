@@ -28,14 +28,15 @@
     "url": "https://github.com/mlj/foma.js/issues"
   },
   "scripts": {
+    "build": "rollup -c",
     "pretest": "rollup -c",
-    "test": "tape 'test/**/*-test.js' && eslint src",
-    "prepublish": "npm run test"
+    "lint": "eslint src",
+    "test": "tape 'test/**/*-test.js'"
   },
   "devDependencies": {
     "eslint": "6",
     "rollup": "1",
     "rollup-plugin-terser": "5",
-    "tape": "4"
+    "tape": "4.13.3"
   }
 }
