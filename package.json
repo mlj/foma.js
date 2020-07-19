@@ -33,7 +33,7 @@
     "prepublish": "npm run test"
   },
   "devDependencies": {
-    "eslint": "4",
+    "eslint": "6",
     "rollup": "1",
     "rollup-plugin-terser": "5",
     "tape": "4"

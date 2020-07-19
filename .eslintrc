@@ -1,12 +1,16 @@
-parserOptions:
-    sourceType: module
-
-env:
-    es6: true
-    browser: true
-
-extends:
-    "eslint:recommended"
-
-rules:
-    no-cond-assign: 0
+{
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 8
+  },
+  "env": {
+    "es6": true,
+    "node": true,
+    "browser": true
+  },
+  "rules": {
+    "no-cond-assign": 0,
+    "no-fallthrough": 0
+  }
+}
