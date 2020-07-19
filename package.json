@@ -1,6 +1,6 @@
 {
   "name": "foma-fst",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A runtime for FOMA finite-state machines",
   "homepage": "https://github.com/mlj/foma.js",
   "main": "dist/foma-fst.js",
