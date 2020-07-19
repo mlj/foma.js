@@ -1,10 +1,10 @@
 var tape = require("tape"),
     fs = require('fs'),
-    fst = require("../");
+    foma = require("../");
 
 tape("foma-fst successfully generates", function(test) {
   var data = JSON.parse(fs.readFileSync('test/test.json', 'utf8'));
-  var net = new fst(data);
+  var net = new foma.FST(data);
   var r = net.applyDownSync("foobar");
 
   test.deepEqual(r, ['foo', 'bar']);
@@ -13,7 +13,7 @@ tape("foma-fst successfully generates", function(test) {
 
 tape("foma-fst fails to generate", function(test) {
   var data = JSON.parse(fs.readFileSync('test/test.json', 'utf8'));
-  var net = new fst(data);
+  var net = new foma.FST(data);
   var r = net.applyDownSync("foobarx");
 
   test.deepEqual(r, []);

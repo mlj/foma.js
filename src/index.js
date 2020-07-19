@@ -1,3 +1,3 @@
-import FomaNet from './foma-fst';
+import FST from './foma-fst';
 
-export default FomaNet;
+export { FST as FST };

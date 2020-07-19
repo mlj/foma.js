@@ -23,7 +23,7 @@ To apply the machine, do something like this:
 
 ```coffee
 jsonFetchedHandler = (data) ->
-  net = new FomaNet(data)
+  net = new foma.FST(data)
   console.info(net.applyDown("something"))
 
 $.getJSON('test.json', jsonFetchedHandler)
@@ -35,7 +35,7 @@ Or with a callback:
 myHandler = (result, myData) ->
 
 jsonFetchedHandler = (data) ->
-  net = new FomaNet(data)
+  net = new foma.FST(data)
   console.info(net.applyDown("something", myHandler, myData))
 
 $.getJSON('test.json', jsonFetchedHandler)

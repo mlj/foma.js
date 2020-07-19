@@ -1,15 +1,15 @@
-const FomaNet = (function() {
-  FomaNet.prototype.sigmas = [];
-  FomaNet.prototype.maxlen = 0;
-  FomaNet.prototype.finals = [];
-  FomaNet.prototype.transitions = [];
+const FST = (function() {
+  FST.prototype.sigmas = [];
+  FST.prototype.maxlen = 0;
+  FST.prototype.finals = [];
+  FST.prototype.transitions = [];
 
-  function FomaNet(json) {
+  function FST(json) {
     if (json)
       this.load(json);
   }
 
-  FomaNet.prototype.load = function(json) {
+  FST.prototype.load = function(json) {
     // Grab sigmas
     this.sigmas = json.sigmas;
 
@@ -85,13 +85,13 @@ const FomaNet = (function() {
     }
   };
 
-  FomaNet.prototype.applyDownSync = function(s) {
+  FST.prototype.applyDownSync = function(s) {
     let buffer = [];
     this.applyDownAsync(s, t => buffer.push(t));
     return buffer;
   };
 
-  FomaNet.prototype.applyDownAsync = function(s, cb) {
+  FST.prototype.applyDownAsync = function(s, cb) {
     let context = {
       s: s,
       cb: cb
@@ -99,7 +99,7 @@ const FomaNet = (function() {
     return this._applyDown(0, 0, "", context);
   }
 
-  FomaNet.prototype._applyDown = function(pos, state, outString, context) {
+  FST.prototype._applyDown = function(pos, state, outString, context) {
     if (context.cb && this.finals[state] && pos === context.s.length)
       context.cb(outString);
 
@@ -137,7 +137,7 @@ const FomaNet = (function() {
     return match;
   };
 
-  FomaNet.prototype._next = function(pos, len, f, i, outString, context) {
+  FST.prototype._next = function(pos, len, f, i, outString, context) {
     var v = f[i];
     var target = v[0], out = v[1];
 
@@ -150,7 +150,7 @@ const FomaNet = (function() {
     }
   };
 
-  FomaNet.prototype._readOutput = function(id, s, pos) {
+  FST.prototype._readOutput = function(id, s, pos) {
     var outputSymbol = this.sigmas[id];
 
     if (outputSymbol === "@UN@")
@@ -161,7 +161,7 @@ const FomaNet = (function() {
       return outputSymbol;
   };
 
-  return FomaNet;
+  return FST;
 })();
 
-export default FomaNet;
+export default FST;
