@@ -41,6 +41,8 @@ jsonFetchedHandler = (data) ->
 $.getJSON('test.json', jsonFetchedHandler)
 ```
 
-## Dependencies
+To run the tests, use
 
-None
+```sh
+npm run test
+```
